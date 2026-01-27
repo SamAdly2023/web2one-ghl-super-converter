@@ -5,19 +5,8 @@ import { CodeDisplay } from './CodeDisplay';
 import { AppState, ConversionStep, RebrandingInfo } from '../types';
 import { fetchWebsiteHtml } from '../services/webFetcher';
 import { optimizeHtmlForGHL } from '../services/geminiService';
+import { X } from 'lucide-react';
 
-// A clean SVG representation of the NAV PRODUCTIONS logo for default brand identity
-const NAV_LOGO_SVG = `data:image/svg+xml;base64,${btoa(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
-  <rect width="400" height="300" fill="transparent"/>
-  <g transform="translate(20, 50)">
-    <path d="M40 140 L40 20 L110 110 L110 20" stroke="black" stroke-width="25" fill="none" stroke-linejoin="miter"/>
-    <path d="M130 140 L195 20 L260 140" stroke="black" stroke-width="25" fill="none" stroke-linejoin="miter"/>
-    <path d="M280 20 L320 140 L360 20" stroke="black" stroke-width="25" fill="none" stroke-linejoin="miter"/>
-    <text x="200" y="190" font-family="'Inter', sans-serif" font-size="28" font-weight="300" letter-spacing="12" text-anchor="middle" fill="black">PRODUCTIONS</text>
-  </g>
-</svg>
-`)}`;
 
 export const ConverterTool: React.FC = () => {
     const [url, setUrl] = useState('');
@@ -25,11 +14,11 @@ export const ConverterTool: React.FC = () => {
     const [generatedHtml, setGeneratedHtml] = useState('');
     const [error, setError] = useState<string | null>(null);
 
-    // Updated with NAV Production defaults
+    // Updated defaults to be empty
     const [rebrand, setRebrand] = useState<RebrandingInfo>({
-        logoUrl: NAV_LOGO_SVG,
-        brandName: 'NAV Production',
-        websiteLink: 'https://www.nav-productions.com/'
+        logoUrl: '',
+        brandName: '',
+        websiteLink: ''
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +125,19 @@ export const ConverterTool: React.FC = () => {
                                     className="w-full h-32 border-2 border-dashed border-slate-700 rounded-xl flex items-center justify-center cursor-pointer hover:border-blue-500 transition-colors group relative overflow-hidden bg-white"
                                 >
                                     {rebrand.logoUrl ? (
-                                        <img src={rebrand.logoUrl} alt="NAV Logo" className="h-full object-contain p-4" />
+                                        <>
+                                            <img src={rebrand.logoUrl} alt="Business Logo" className="h-full object-contain p-4" />
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setRebrand(prev => ({ ...prev, logoUrl: '' }));
+                                                    if (fileInputRef.current) fileInputRef.current.value = '';
+                                                }}
+                                                className="absolute top-2 right-2 p-1 bg-slate-900/50 hover:bg-slate-900 rounded-full text-white transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </>
                                     ) : (
                                         <div className="text-center">
                                             <p className="text-slate-500 text-sm group-hover:text-blue-400">Upload Logo</p>
