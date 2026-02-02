@@ -133,7 +133,8 @@ export const ConverterTool: React.FC = () => {
                                                     setRebrand(prev => ({ ...prev, logoUrl: '' }));
                                                     if (fileInputRef.current) fileInputRef.current.value = '';
                                                 }}
-                                                className="absolute top-2 right-2 p-1 bg-slate-900/50 hover:bg-slate-900 rounded-full text-white transition-colors"
+                                                className="absolute top-2 right-2 p-1 bg-red-500/80 hover:bg-red-600 rounded-full text-white transition-colors z-10"
+                                                title="Remove Logo"
                                             >
                                                 <X size={16} />
                                             </button>
@@ -145,14 +146,14 @@ export const ConverterTool: React.FC = () => {
                                     )}
                                     <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                                 </div>
-                                <p className="mt-2 text-[10px] text-slate-500 text-center uppercase tracking-widest">Click to Change Default Logo</p>
+                                <p className="mt-2 text-[10px] text-slate-500 text-center uppercase tracking-widest">Supports PNG, JPG, SVG</p>
                             </div>
 
                             <div>
                                 <label className="block text-sm text-slate-400 mb-2 font-medium">Business Name</label>
                                 <input
                                     type="text"
-                                    placeholder="The JAG Group"
+                                    placeholder="Enter Business Name"
                                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-slate-100"
                                     value={rebrand.brandName}
                                     onChange={(e) => setRebrand(prev => ({ ...prev, brandName: e.target.value }))}
@@ -210,7 +211,7 @@ export const ConverterTool: React.FC = () => {
                             <p className="text-slate-500 max-w-sm leading-relaxed">
                                 {appState === AppState.CONVERTING
                                     ? "We are currently mapping every visual element. For JS-heavy sites like Rela, we are 'flat-rendering' the components into static HTML/CSS to ensure GHL compatibility."
-                                    : `Your high-end cloned design will appear here. Rebranding is currently set to ${rebrand.brandName} by default.`}
+                                    : `Your high-end cloned design will appear here. Rebranding is currently set to ${rebrand.brandName || "Original Brand"}.`}
                             </p>
                             {appState === AppState.CONVERTING && (
                                 <div className="mt-8 w-64 h-1 bg-slate-800 rounded-full overflow-hidden">
