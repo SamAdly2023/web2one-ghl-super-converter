@@ -2,13 +2,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { RebrandingInfo } from "../types";
 
-// Use environment variable or fallback to provided key
+// Use environment variable
 const GEMINI_API_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY)
   || process.env.VITE_GEMINI_API_KEY
-  || process.env.API_KEY
-  || "AIzaSyBTn4trIqGR0QKLBxMI4tRQLnUalxWZ0Pk";
+  || process.env.API_KEY;
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+if (!GEMINI_API_KEY) {
+  console.warn("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
+}
+
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY || "dummy_key" });
 
 export async function optimizeHtmlForGHL(
   rawHtml: string,

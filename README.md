@@ -45,8 +45,8 @@ In the **Environment** section, add:
 ```
 NODE_ENV=production
 VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
-VITE_GEMINI_API_KEY=AIzaSyBTn4trIqGR0QKLBxMI4tRQLnUalxWZ0Pk
-VITE_PAYPAL_CLIENT_ID=AarwkYK4lzBjwzF7OCgJeoRBnGAZehBAsNrEyrQZSdzu7yyPH3P7qEm0qtm-VNj_SvYFPpKA9PjZqO2G
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_PAYPAL_CLIENT_ID=your_paypal_client_id_here
 ```
 
 ### Step 4: Deploy

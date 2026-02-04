@@ -3,9 +3,12 @@
  * Handles payment processing for subscriptions and one-time purchases
  */
 
-// Use environment variable or fallback to provided key
-const PAYPAL_CLIENT_ID = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PAYPAL_CLIENT_ID)
-    || 'AarwkYK4lzBjwzF7OCgJeoRBnGAZehBAsNrEyrQZSdzu7yyPH3P7qEm0qtm-VNj_SvYFPpKA9PjZqO2G';
+// Use environment variable
+const PAYPAL_CLIENT_ID = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PAYPAL_CLIENT_ID) || '';
+
+if (!PAYPAL_CLIENT_ID) {
+    console.warn("PayPal Client ID is missing. Please set VITE_PAYPAL_CLIENT_ID in your environment variables.");
+}
 
 // Note: Secret should NEVER be exposed in frontend code
 // This is for demonstration - in production, handle payments server-side
