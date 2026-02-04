@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Users, Activity, DollarSign, Settings, Bell, Server,
     Search, Filter, MoreVertical, Edit2, Trash2, Crown,
     Download, RefreshCw, ChevronDown, Check, X, Eye,
-    TrendingUp, Calendar, CreditCard, Shield, Zap
+    TrendingUp, Calendar, CreditCard, Shield, Zap, LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { User, Project, PlanType, PLANS } from '../types';
@@ -13,6 +14,7 @@ type TabType = 'overview' | 'users' | 'projects' | 'payments' | 'settings';
 
 export const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<TabType>('overview');
     const [users, setUsers] = useState<User[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
@@ -73,6 +75,13 @@ export const AdminDashboard: React.FC = () => {
                         <p className="text-slate-400 text-sm">Manage users, projects, and subscriptions</p>
                     </div>
                     <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                        >
+                            <LayoutDashboard size={18} />
+                            Client View
+                        </button>
                         <button
                             onClick={loadData}
                             className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"

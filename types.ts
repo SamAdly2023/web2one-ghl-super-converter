@@ -35,59 +35,31 @@ export interface Plan {
 export const PLANS: Plan[] = [
   {
     id: 'free',
-    name: 'Free Trial',
+    name: 'Standard',
     price: 0,
-    credits: 2,
+    credits: 0, // Pay as you go
     features: [
-      '2 Free Conversions',
+      'Pay per conversion ($8)',
       'Basic Support',
       'Standard Quality',
-      'Watermarked Output'
     ]
   },
   {
-    id: 'starter',
-    name: 'Starter',
-    price: 49,
-    credits: 10,
-    features: [
-      '10 Conversions',
-      'Priority Support',
-      'High-Fidelity Output',
-      'No Watermark',
-      'Rebranding Tools'
-    ]
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
+    id: 'agency', // Keeping ID as agency for now, but UI will show Unlimited
+    name: 'Unlimited',
     price: 97,
-    credits: -1, // unlimited
-    popular: true,
+    credits: -1, // Unlimited
     features: [
       'Unlimited Conversions',
-      '24/7 Priority Support',
-      'Ultra HD Quality',
-      'Advanced Rebranding',
-      'API Access',
-      'White-Label Export'
-    ]
-  },
-  {
-    id: 'agency',
-    name: 'Agency',
-    price: 297,
-    credits: -1,
-    features: [
-      'Everything in Pro',
-      'Team Seats (5 Users)',
-      'Dedicated Account Manager',
-      'Custom Integrations',
-      'SLA Guarantee',
-      'Priority Queue'
-    ]
+      'Priority Support',
+      'High Fidelity Results',
+      'No Watermark',
+      'Commercial License'
+    ],
+    popular: true
   }
 ];
+
 
 export interface User {
   id: string;

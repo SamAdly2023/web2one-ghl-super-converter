@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { X, Check, Shield, Zap } from 'lucide-react';
 import { Plan, PlanType } from '../types';
 import { loadPayPalScript, getPayPalClientId } from '../services/paypalService';
-import { updateUserPlan, createPayment, createSubscription } from '../services/databaseService';
+import { updateUser, updateUserPlan, createPayment, createSubscription } from '../services/databaseService';
 import { useAuth } from '../context/AuthContext';
 
 interface PayPalModalProps {
@@ -10,9 +10,10 @@ interface PayPalModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    mode?: 'subscription' | 'credits';
 }
 
-export const PayPalModal: React.FC<PayPalModalProps> = ({ plan, isOpen, onClose, onSuccess }) => {
+export const PayPalModal: React.FC<PayPalModalProps> = ({ plan, isOpen, onClose, onSuccess, mode = 'subscription' }) => {
     const { user, refreshUser } = useAuth();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -58,7 +59,9 @@ export const PayPalModal: React.FC<PayPalModalProps> = ({ plan, isOpen, onClose,
                 createOrder: (data: any, actions: any) => {
                     return actions.order.create({
                         purchase_units: [{
-                            description: `Web2One ${plan.name} Plan - Monthly Subscription`,
+                            description: mode === 'credits'
+                                ? `Web2One Credits - ${plan.name}`
+                                : `Web2One ${plan.name} Plan - Monthly Subscription`,
                             amount: {
                                 currency_code: 'USD',
                                 value: plan.price.toFixed(2)
@@ -72,24 +75,33 @@ export const PayPalModal: React.FC<PayPalModalProps> = ({ plan, isOpen, onClose,
 
                         // Update user plan in database
                         if (user) {
-                            await updateUserPlan(user.id, plan.id);
+                            if (mode === 'credits') {
+                                // Add credits to existing balance
+                                const currentCredits = user.credits === -1 ? 0 : user.credits;
+                                await updateUser(user.id, {
+                                    credits: currentCredits + plan.credits
+                                });
+                            } else {
+                                // Update Plan logic
+                                await updateUserPlan(user.id, plan.id);
 
-                            // Create payment record
+                                // Create subscription record
+                                await createSubscription({
+                                    userId: user.id,
+                                    planId: plan.id,
+                                    status: 'active',
+                                    paypalSubscriptionId: order.id,
+                                    autoRenew: true
+                                });
+                            }
+
+                            // Create payment record (for all types)
                             await createPayment({
                                 userId: user.id,
                                 amount: plan.price,
                                 planId: plan.id,
                                 paypalTransactionId: order.id,
                                 status: 'completed'
-                            });
-
-                            // Create subscription record
-                            await createSubscription({
-                                userId: user.id,
-                                planId: plan.id,
-                                status: 'active',
-                                paypalSubscriptionId: order.id,
-                                autoRenew: true
                             });
 
                             await refreshUser();

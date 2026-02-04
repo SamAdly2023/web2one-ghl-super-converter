@@ -2,24 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { ConverterTool } from '../components/ConverterTool';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Project, PLANS } from '../types';
+import { Project, PLANS, Plan } from '../types';
 import { getProjectsByUserId, deleteProject } from '../services/databaseService';
+import { PayPalModal } from '../components/PayPalModal';
 import {
     Zap, Clock, FolderOpen, Settings, CreditCard, HelpCircle,
     Plus, Eye, Trash2, Download, Copy, ExternalLink, Check,
-    Crown, Sparkles, LayoutDashboard, History, BookOpen
+    Crown, Sparkles, LayoutDashboard, History, BookOpen, ShieldCheck,
 } from 'lucide-react';
 
 type TabType = 'converter' | 'projects' | 'billing' | 'settings';
 
 export const UserDashboard: React.FC = () => {
-    const { user, credits, plan, refreshUser } = useAuth();
+    const { user, credits, plan, refreshUser, isAdmin } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<TabType>('converter');
     const [projects, setProjects] = useState<Project[]>([]);
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
+    // Billing State
+    const [isPayPalOpen, setIsPayPalOpen] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<Plan>(PLANS[0]);
+    const [payPalMode, setPayPalMode] = useState<'subscription' | 'credits'>('subscription');
+    const [customCredits, setCustomCredits] = useState(1);
+
     const currentPlan = PLANS.find(p => p.id === plan);
+
+    const handleBuyCredits = () => {
+        setSelectedPlan({
+            id: 'free', // Dummy ID for credits
+            name: `${customCredits} Credits`,
+            price: customCredits * 8,
+            credits: customCredits,
+            features: []
+        });
+        setPayPalMode('credits');
+        setIsPayPalOpen(true);
+    };
+
+    const handleUpgrade = (targetPlan: Plan) => {
+        setSelectedPlan(targetPlan);
+        setPayPalMode('subscription');
+        setIsPayPalOpen(true);
+    };
 
     useEffect(() => {
         if (user?.id) {
@@ -95,12 +120,12 @@ export const UserDashboard: React.FC = () => {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="space-y-2">
+                    <nav className="space-y-1">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as TabType)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === tab.id
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${activeTab === tab.id
                                     ? 'bg-blue-600 text-white'
                                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                     }`}
@@ -113,16 +138,21 @@ export const UserDashboard: React.FC = () => {
 
                     {/* Quick Links */}
                     <div className="mt-8 pt-6 border-t border-slate-800">
+                        {isAdmin && (
+                            <button
+                                onClick={() => navigate('/admin')}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-all mb-1"
+                            >
+                                <ShieldCheck size={18} />
+                                Admin Dashboard
+                            </button>
+                        )}
                         <button
                             onClick={() => navigate('/guide')}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-all"
+                            className="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-all"
                         >
                             <BookOpen size={18} />
                             User Guide
-                        </button>
-                        <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-all">
-                            <HelpCircle size={18} />
-                            Help & Support
                         </button>
                     </div>
                 </div>
@@ -268,65 +298,113 @@ export const UserDashboard: React.FC = () => {
                 {/* Billing Tab */}
                 {activeTab === 'billing' && (
                     <div className="space-y-8">
-                        {/* Current Plan */}
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Current Plan</h3>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${plan === 'agency' ? 'bg-purple-500/10' :
-                                        plan === 'pro' ? 'bg-blue-500/10' :
-                                            plan === 'starter' ? 'bg-emerald-500/10' :
-                                                'bg-slate-800'
-                                        }`}>
-                                        <Crown className={`w-6 h-6 ${plan === 'agency' ? 'text-purple-400' :
-                                            plan === 'pro' ? 'text-blue-400' :
-                                                plan === 'starter' ? 'text-emerald-400' :
-                                                    'text-slate-400'
-                                            }`} />
-                                    </div>
+
+                        {/* 1. Add Credits (Pay As You Go) */}
+                        {plan !== 'agency' && (
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                                <div className="flex items-start justify-between gap-6">
                                     <div>
-                                        <div className="text-white font-bold text-xl">{currentPlan?.name}</div>
-                                        <div className="text-slate-400">
-                                            ${currentPlan?.price}/month • {credits === -1 ? 'Unlimited' : `${credits} credits remaining`}
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="p-2 bg-blue-500/10 rounded-lg">
+                                                <Zap className="w-6 h-6 text-blue-400" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-white">Add Credits</h3>
                                         </div>
+                                        <p className="text-slate-400 max-w-md">
+                                            Pay as you go. Credits never expire. Best for occasional use.
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-3xl font-bold text-white">{credits === -1 ? '∞' : credits}</div>
+                                        <div className="text-slate-500 text-sm">Current Balance</div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 p-6 bg-slate-800/50 rounded-xl flex flex-col md:flex-row items-center gap-8">
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-medium text-slate-400 mb-2">Select Quantity</label>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => setCustomCredits(Math.max(1, customCredits - 1))}
+                                                className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors"
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={customCredits}
+                                                onChange={(e) => setCustomCredits(Math.max(1, parseInt(e.target.value) || 1))}
+                                                className="flex-1 bg-slate-900 border border-slate-700 text-white text-center h-10 rounded-lg focus:outline-none focus:border-blue-500"
+                                            />
+                                            <button
+                                                onClick={() => setCustomCredits(customCredits + 1)}
+                                                className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="hidden md:block w-px h-16 bg-slate-700"></div>
+
+                                    <div className="flex-1 text-center md:text-left">
+                                        <div className="text-3xl font-bold text-white">${(customCredits * 8).toFixed(2)}</div>
+                                        <div className="text-slate-400 text-sm">$8.00 per clone</div>
+                                    </div>
+
+                                    <div className="flex-1 w-full">
+                                        <button
+                                            onClick={handleBuyCredits}
+                                            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2"
+                                        >
+                                            <CreditCard size={20} />
+                                            Buy Credits
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
+                        {/* 2. Upgrade to Unlimited */}
+                        {plan !== 'agency' && (
+                            <div className="bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-purple-500/20 rounded-2xl p-8 relative overflow-hidden group hover:border-purple-500/40 transition-all">
+                                <div className="absolute top-0 right-0 p-3 bg-purple-500 text-white text-xs font-bold rounded-bl-xl">
+                                    BEST VALUE
+                                </div>
 
-                        {/* Upgrade Options */}
-                        <div>
-                            <h3 className="text-lg font-bold text-white mb-4">Upgrade Your Plan</h3>
-                            <div className="grid md:grid-cols-3 gap-4">
-                                {PLANS.filter(p => p.id !== 'free' && p.id !== plan).map((upgradePlan) => (
-                                    <div
-                                        key={upgradePlan.id}
-                                        className={`bg-slate-900 border rounded-xl p-6 ${upgradePlan.popular ? 'border-blue-500' : 'border-slate-800'
-                                            }`}
-                                    >
-                                        {upgradePlan.popular && (
-                                            <span className="inline-block px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded mb-3">
-                                                POPULAR
-                                            </span>
-                                        )}
-                                        <h4 className="text-white font-bold">{upgradePlan.name}</h4>
-                                        <div className="text-2xl font-bold text-white mt-2">${upgradePlan.price}<span className="text-slate-400 text-sm">/mo</span></div>
-                                        <ul className="mt-4 space-y-2">
-                                            {upgradePlan.features.slice(0, 3).map((feature, i) => (
-                                                <li key={i} className="text-slate-400 text-sm flex items-center gap-2">
-                                                    <Check className="w-4 h-4 text-emerald-400" />
-                                                    {feature}
-                                                </li>
-                                            ))}
+                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="p-2 bg-purple-500/20 rounded-lg">
+                                                <Crown className="w-6 h-6 text-purple-400" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-white">Unlimited Plan</h3>
+                                        </div>
+                                        <p className="text-slate-300 mb-4">
+                                            Remove all limits. Clone as many websites as you want for a fixed monthly price.
+                                        </p>
+                                        <ul className="space-y-2">
+                                            <li className="flex items-center gap-2 text-sm text-slate-400">
+                                                <Check className="w-4 h-4 text-emerald-400" /> Unlimited Conversions
+                                            </li>
+                                            <li className="flex items-center gap-2 text-sm text-slate-400">
+                                                <Check className="w-4 h-4 text-emerald-400" /> Priority Support
+                                            </li>
                                         </ul>
-                                        <div id={`paypal-button-${upgradePlan.id}`} className="mt-4"></div>
-                                        <button className="w-full mt-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                            Upgrade with PayPal
+                                    </div>
+
+                                    <div className="text-center md:text-right">
+                                        <div className="text-5xl font-bold text-white mb-2">$97<span className="text-lg text-slate-400 font-normal">/mo</span></div>
+                                        <button
+                                            onClick={() => handleUpgrade(PLANS.find(p => p.id === 'agency')!)}
+                                            className="px-8 py-4 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition-colors shadow-xl"
+                                        >
+                                            Upgrade Now
                                         </button>
                                     </div>
-                                ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Payment History */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
@@ -393,6 +471,17 @@ export const UserDashboard: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <PayPalModal
+                isOpen={isPayPalOpen}
+                onClose={() => setIsPayPalOpen(false)}
+                plan={selectedPlan}
+                mode={payPalMode}
+                onSuccess={() => {
+                    refreshUser();
+                    setIsPayPalOpen(false);
+                }}
+            />
         </div>
     );
 };
