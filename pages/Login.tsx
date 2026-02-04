@@ -57,90 +57,52 @@ export const Login: React.FC = () => {
                     </div>
                 </div>
 
-                {showDevLogin && (
-                    <>
-                        <div className="relative mb-6">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-slate-800"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-slate-900 text-slate-500">Or enter email</span>
-                            </div>
+                {/* Right Side - Features */}
+                <div className="flex-1 hidden lg:flex flex-col justify-center">
+                    <div className="space-y-6">
+                        <div>
+                            <h3 className="text-2xl font-bold text-white mb-2">Start Cloning Websites Today</h3>
+                            <p className="text-slate-400">
+                                Join thousands of GHL agencies who save hours on every project with Web2One.
+                            </p>
                         </div>
 
-                        <form onSubmit={handleMockLogin}>
-                            <div className="mb-4">
-                                <label className="block text-slate-400 text-sm font-medium mb-2">Email Address</label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
-                                    placeholder="name@example.com"
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors"
-                            >
-                                Access Dashboard
-                            </button>
-                        </form>
-                    </>
-                )}
-
-                <p className="mt-6 text-xs text-slate-500 text-center">
-                    By signing in, you agree to our Terms of Service and Privacy Policy
-                </p>
-            </div>
-        </div>
-
-                {/* Right Side - Features */ }
-    <div className="flex-1 hidden lg:flex flex-col justify-center">
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Start Cloning Websites Today</h3>
-                <p className="text-slate-400">
-                    Join thousands of GHL agencies who save hours on every project with Web2One.
-                </p>
-            </div>
-
-            <div className="space-y-4">
-                {[
-                    'Clone any website in 30 seconds',
-                    'AI-powered reconstruction for JS sites',
-                    'Perfect GHL compatibility guaranteed',
-                    'Instant rebranding with your logo',
-                    '2 free conversions to get started'
-                ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                            <Check className="w-4 h-4 text-emerald-400" />
+                        <div className="space-y-4">
+                            {[
+                                'Clone any website in 30 seconds',
+                                'AI-powered reconstruction for JS sites',
+                                'Perfect GHL compatibility guaranteed',
+                                'Instant rebranding with your logo',
+                                '2 free conversions to get started'
+                            ].map((feature, i) => (
+                                <div key={i} className="flex items-center gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                                        <Check className="w-4 h-4 text-emerald-400" />
+                                    </div>
+                                    <span className="text-slate-300">{feature}</span>
+                                </div>
+                            ))}
                         </div>
-                        <span className="text-slate-300">{feature}</span>
-                    </div>
-                ))}
-            </div>
 
-            {/* Testimonial */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 mt-8">
-                <div className="flex text-yellow-400 mb-3">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
-                </div>
-                <p className="text-slate-300 italic mb-4">
-                    "Web2One transformed how our agency works. What used to take days now takes minutes. The ROI is incredible."
-                </p>
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500"></div>
-                    <div>
-                        <div className="text-white font-medium">Sarah Johnson</div>
-                        <div className="text-slate-500 text-sm">Agency Owner, Digital Spark</div>
+                        {/* Testimonial */}
+                        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 mt-8">
+                            <div className="flex text-yellow-400 mb-3">
+                                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+                            </div>
+                            <p className="text-slate-300 italic mb-4">
+                                "Web2One transformed how our agency works. What used to take days now takes minutes. The ROI is incredible."
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500"></div>
+                                <div>
+                                    <div className="text-white font-medium">Sarah Johnson</div>
+                                    <div className="text-slate-500 text-sm">Agency Owner, Digital Spark</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-            </div >
-        </div >
     );
 };
