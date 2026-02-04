@@ -1,20 +1,124 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<h1>🚀 Web2One - GHL Super Converter</h1>
+<p>Clone any website and convert it to GoHighLevel-ready HTML in seconds</p>
 </div>
 
-# Run and deploy your AI Studio app
+## 📦 Quick Start
 
-This contains everything you need to run your app locally.
+```bash
+# Install dependencies
+npm install
 
-View your app in AI Studio: https://ai.studio/apps/drive/1qjzqWuFSN2x2g5LsLepagqVpsXYH7frg
+# Run development server
+npm run dev
 
-## Run Locally
+# Build for production
+npm run build
 
-**Prerequisites:**  Node.js
+# Start production server
+npm start
+```
 
+## 🌐 Deploying to Render.com
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Step 1: Create a New Web Service
+
+1. Go to [render.com](https://render.com) and sign in
+2. Click **New +** → **Web Service**
+3. Connect your GitHub/GitLab repository
+4. Enter the repository URL
+
+### Step 2: Configure Build Settings
+
+| Setting | Value |
+|---------|-------|
+| **Name** | web2one-ghl-converter |
+| **Environment** | Node |
+| **Build Command** | `npm install && npm run build` |
+| **Start Command** | `npm start` |
+| **Plan** | Free (or Starter for better performance) |
+
+### Step 3: Set Environment Variables
+
+In the **Environment** section, add:
+
+```
+NODE_ENV=production
+VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+VITE_GEMINI_API_KEY=AIzaSyBTn4trIqGR0QKLBxMI4tRQLnUalxWZ0Pk
+VITE_PAYPAL_CLIENT_ID=AarwkYK4lzBjwzF7OCgJeoRBnGAZehBAsNrEyrQZSdzu7yyPH3P7qEm0qtm-VNj_SvYFPpKA9PjZqO2G
+```
+
+### Step 4: Deploy
+
+Click **Create Web Service** and wait for the build to complete.
+
+---
+
+## 🔐 Setting Up Google OAuth
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select existing
+3. Navigate to **APIs & Services** → **Credentials**
+4. Click **Create Credentials** → **OAuth client ID**
+5. Select **Web application**
+6. Add authorized JavaScript origins:
+   - `http://localhost:5173` (development)
+   - `https://your-app.onrender.com` (production)
+7. Add authorized redirect URIs (same as above)
+8. Copy the Client ID and add to environment variables
+
+---
+
+## 💳 PayPal Integration
+
+The app uses PayPal for payments:
+
+- **Client ID**: Configured in services/paypalService.ts
+- **Mode**: Live (change to sandbox URL for testing)
+
+---
+
+## 📱 Features
+
+- ✅ Professional landing page with pricing
+- ✅ Google OAuth authentication
+- ✅ One-Tap login popup
+- ✅ User dashboard with credits
+- ✅ Admin dashboard (user management)
+- ✅ AI-powered website cloning
+- ✅ Rebranding tools
+- ✅ PayPal subscription payments
+- ✅ User guide / documentation
+
+---
+
+## 🎯 Pricing Plans
+
+| Plan | Price | Credits |
+|------|-------|---------|
+| Free | $0 | 2 |
+| Starter | $49/mo | 10 |
+| Pro | $97/mo | Unlimited |
+| Agency | $297/mo | Unlimited + Team |
+
+---
+
+## 👤 Admin Access
+
+Default admin email: `samadly728@gmail.com`
+
+---
+
+## 🔧 Tech Stack
+
+- React 19 + TypeScript
+- Tailwind CSS
+- Google Gemini AI
+- PayPal SDK
+- Express.js
+- Vite
+
+---
+
+© 2026 Web2One. All rights reserved.

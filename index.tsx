@@ -10,8 +10,9 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 
-// NOTE: Replace with your actual Google Client ID
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com";
+// Google Client ID - Set this in your .env file or Render environment variables
+// To get a Client ID: https://console.cloud.google.com/apis/credentials
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com";
 
 root.render(
     <React.StrictMode>

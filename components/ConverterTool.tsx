@@ -5,14 +5,18 @@ import { CodeDisplay } from './CodeDisplay';
 import { AppState, ConversionStep, RebrandingInfo } from '../types';
 import { fetchWebsiteHtml } from '../services/webFetcher';
 import { optimizeHtmlForGHL } from '../services/geminiService';
-import { X } from 'lucide-react';
+import { createProject, updateProject, useCredit } from '../services/databaseService';
+import { useAuth } from '../context/AuthContext';
+import { X, Zap, AlertTriangle } from 'lucide-react';
 
 
 export const ConverterTool: React.FC = () => {
+    const { user, credits, useCredit: authUseCredit, refreshUser } = useAuth();
     const [url, setUrl] = useState('');
     const [appState, setAppState] = useState<AppState>(AppState.IDLE);
     const [generatedHtml, setGeneratedHtml] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 
     // Updated defaults to be empty
     const [rebrand, setRebrand] = useState<RebrandingInfo>({
@@ -47,11 +51,30 @@ export const ConverterTool: React.FC = () => {
 
     const handleConvert = async () => {
         if (!url) return;
+        if (!user) {
+            setError('Please log in to use the converter.');
+            return;
+        }
+
+        // Check credits
+        if (credits !== -1 && credits <= 0) {
+            setError('No credits remaining. Please upgrade your plan.');
+            return;
+        }
 
         setError(null);
         setGeneratedHtml('');
         setAppState(AppState.FETCHING);
         setSteps(s => s.map(step => ({ ...step, status: 'pending' })));
+
+        // Create project in database
+        const project = createProject({
+            userId: user.id,
+            sourceUrl: url,
+            rebrandInfo: rebrand
+        });
+        setCurrentProjectId(project.id);
+        updateProject(project.id, { status: 'processing' });
 
         try {
             updateStep('fetch', 'loading');
@@ -72,10 +95,26 @@ export const ConverterTool: React.FC = () => {
             updateStep('finalize', 'completed');
             setAppState(AppState.COMPLETED);
 
+            // Update project with result
+            updateProject(project.id, {
+                status: 'completed',
+                outputHtml: optimized,
+                completedAt: new Date().toISOString()
+            });
+
+            // Use credit
+            authUseCredit();
+            refreshUser();
+
         } catch (err: any) {
             setError(err.message || 'An unexpected error occurred during reconstruction.');
             setAppState(AppState.ERROR);
             setSteps(prev => prev.map(s => s.status === 'loading' ? { ...s, status: 'error' } : s));
+
+            // Update project as failed
+            if (currentProjectId) {
+                updateProject(currentProjectId, { status: 'failed' });
+            }
         }
     };
 

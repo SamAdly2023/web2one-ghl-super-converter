@@ -1,19 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { googleLogout, useGoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
-
-interface User {
-    email: string;
-    name: string;
-    picture?: string;
-}
+import { User as AppUser, PlanType, PLANS } from '../types';
+import { createUser, getUserByEmail, updateUser, updateUserPlan } from '../services/databaseService';
 
 interface AuthContextType {
-    user: User | null;
+    user: AppUser | null;
     isAdmin: boolean;
+    credits: number;
+    plan: PlanType;
     loginWithGoogle: () => void;
     mockLogin: (email: string) => void;
     logout: () => void;
+    refreshUser: () => void;
+    useCredit: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,12 +20,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const ADMIN_EMAIL = 'samadly728@gmail.com';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(() => {
-        const saved = localStorage.getItem('user');
+    const [user, setUser] = useState<AppUser | null>(() => {
+        const saved = localStorage.getItem('currentUser');
         return saved ? JSON.parse(saved) : null;
     });
 
     const isAdmin = user?.email === ADMIN_EMAIL;
+    const credits = user?.credits ?? 0;
+    const plan = user?.plan ?? 'free';
+
+    // Refresh user data from database
+    const refreshUser = () => {
+        if (user?.email) {
+            const dbUser = getUserByEmail(user.email);
+            if (dbUser) {
+                setUser(dbUser);
+                localStorage.setItem('currentUser', JSON.stringify(dbUser));
+            }
+        }
+    };
+
+    // Use a credit for conversion
+    const useCreditHandler = (): boolean => {
+        if (!user) return false;
+
+        // Unlimited credits for pro/agency
+        if (user.credits === -1) return true;
+
+        if (user.credits <= 0) return false;
+
+        const updatedUser = updateUser(user.id, { credits: user.credits - 1 });
+        if (updatedUser) {
+            setUser(updatedUser);
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            return true;
+        }
+        return false;
+    };
 
     const loginWithGoogle = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
@@ -35,13 +65,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
                 });
                 const userInfo = await userInfoResponse.json();
-                const userData: User = {
+
+                // Create or get user from database
+                const dbUser = createUser({
                     email: userInfo.email,
                     name: userInfo.name,
                     picture: userInfo.picture,
-                };
-                setUser(userData);
-                localStorage.setItem('user', JSON.stringify(userData));
+                });
+
+                setUser(dbUser);
+                localStorage.setItem('currentUser', JSON.stringify(dbUser));
             } catch (error) {
                 console.error('Login Failed', error);
             }
@@ -50,23 +83,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const mockLogin = (email: string) => {
-        const userData: User = {
+        // Create or get user from database
+        const dbUser = createUser({
             email,
             name: email.split('@')[0],
-            picture: `https://ui-avatars.com/api/?name=${email}&background=random`,
-        };
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+            picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=6366f1&color=fff`,
+        });
+
+        setUser(dbUser);
+        localStorage.setItem('currentUser', JSON.stringify(dbUser));
     };
 
     const logout = () => {
         googleLogout();
         setUser(null);
-        localStorage.removeItem('user');
+        localStorage.removeItem('currentUser');
     };
 
+    // Sync user state with database on mount
+    useEffect(() => {
+        if (user?.email) {
+            const dbUser = getUserByEmail(user.email);
+            if (dbUser && JSON.stringify(dbUser) !== JSON.stringify(user)) {
+                setUser(dbUser);
+                localStorage.setItem('currentUser', JSON.stringify(dbUser));
+            }
+        }
+    }, []);
+
     return (
-        <AuthContext.Provider value={{ user, isAdmin, loginWithGoogle, mockLogin, logout }}>
+        <AuthContext.Provider value={{
+            user,
+            isAdmin,
+            credits,
+            plan,
+            loginWithGoogle,
+            mockLogin,
+            logout,
+            refreshUser,
+            useCredit: useCreditHandler
+        }}>
             {children}
         </AuthContext.Provider>
     );

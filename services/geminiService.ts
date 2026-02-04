@@ -2,11 +2,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { RebrandingInfo } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Use environment variable or fallback to provided key
+const GEMINI_API_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY)
+  || process.env.VITE_GEMINI_API_KEY
+  || process.env.API_KEY
+  || "AIzaSyBTn4trIqGR0QKLBxMI4tRQLnUalxWZ0Pk";
+
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 export async function optimizeHtmlForGHL(
-  rawHtml: string, 
-  originalUrl: string, 
+  rawHtml: string,
+  originalUrl: string,
   rebrand?: RebrandingInfo
 ): Promise<string> {
   const model = "gemini-3-pro-preview";
@@ -81,13 +87,13 @@ export async function optimizeHtmlForGHL(
     // Accessing the text property directly as per @google/genai guidelines
     let result = response.text || "";
     result = result.trim();
-    
+
     // Cleaning AI artifacts like markdown code blocks
     result = result.replace(/^```html\s*/i, "").replace(/^```\s*/, "").replace(/\s*```$/m, "");
-    
+
     const firstTag = result.indexOf('<');
     const lastTag = result.lastIndexOf('>');
-    
+
     if (firstTag !== -1 && lastTag !== -1) {
       result = result.substring(firstTag, lastTag + 1);
     }

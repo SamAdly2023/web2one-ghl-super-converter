@@ -1,10 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
+import { GoogleOneTap } from './components/GoogleOneTap';
 import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/Login';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { UserDashboard } from './pages/UserDashboard';
+import { UserGuide } from './pages/UserGuide';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected Route Component
@@ -23,12 +25,17 @@ const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.Re
 };
 
 const AppRoutes = () => {
+    const { user } = useAuth();
+
     return (
         <div className="min-h-screen bg-slate-950">
             <Navbar />
+            {/* Google One-Tap Login Popup */}
+            <GoogleOneTap />
             <Routes>
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<Login />} />
+                <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+                <Route path="/guide" element={<UserGuide />} />
                 <Route
                     path="/dashboard"
                     element={
