@@ -19,10 +19,10 @@ export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [showDevLogin, setShowDevLogin] = useState(false);
 
-    const handleMockLogin = (e: React.FormEvent) => {
+    const handleMockLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email) return;
-        mockLogin(email);
+        await mockLogin(email);
         navigate('/dashboard');
     };
 
@@ -66,8 +66,8 @@ export const Login: React.FC = () => {
                                 {quickLogins.map((login, i) => (
                                     <button
                                         key={i}
-                                        onClick={() => {
-                                            mockLogin(login.email);
+                                        onClick={async () => {
+                                            await mockLogin(login.email);
                                             navigate('/dashboard');
                                         }}
                                         className="w-full flex items-center gap-3 p-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors text-left"

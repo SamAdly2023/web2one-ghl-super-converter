@@ -72,10 +72,10 @@ export const PayPalModal: React.FC<PayPalModalProps> = ({ plan, isOpen, onClose,
 
                         // Update user plan in database
                         if (user) {
-                            updateUserPlan(user.id, plan.id);
+                            await updateUserPlan(user.id, plan.id);
 
                             // Create payment record
-                            createPayment({
+                            await createPayment({
                                 userId: user.id,
                                 amount: plan.price,
                                 planId: plan.id,
@@ -84,7 +84,7 @@ export const PayPalModal: React.FC<PayPalModalProps> = ({ plan, isOpen, onClose,
                             });
 
                             // Create subscription record
-                            createSubscription({
+                            await createSubscription({
                                 userId: user.id,
                                 planId: plan.id,
                                 status: 'active',
@@ -92,7 +92,7 @@ export const PayPalModal: React.FC<PayPalModalProps> = ({ plan, isOpen, onClose,
                                 autoRenew: true
                             });
 
-                            refreshUser();
+                            await refreshUser();
                         }
 
                         setPaymentComplete(true);

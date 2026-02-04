@@ -9,10 +9,10 @@ interface AuthContextType {
     credits: number;
     plan: PlanType;
     loginWithGoogle: () => void;
-    mockLogin: (email: string) => void;
+    mockLogin: (email: string) => Promise<void>;
     logout: () => void;
-    refreshUser: () => void;
-    useCredit: () => boolean;
+    refreshUser: () => Promise<void>;
+    useCredit: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,18 +30,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const plan = user?.plan ?? 'free';
 
     // Refresh user data from database
-    const refreshUser = () => {
+    const refreshUser = async () => {
         if (user?.email) {
-            const dbUser = getUserByEmail(user.email);
-            if (dbUser) {
-                setUser(dbUser);
-                localStorage.setItem('currentUser', JSON.stringify(dbUser));
+            try {
+                const dbUser = await getUserByEmail(user.email);
+                if (dbUser) {
+                    setUser(dbUser);
+                    localStorage.setItem('currentUser', JSON.stringify(dbUser));
+                }
+            } catch (err) {
+                console.error("Failed to refresh user", err);
             }
         }
     };
 
     // Use a credit for conversion
-    const useCreditHandler = (): boolean => {
+    const useCreditHandler = async (): Promise<boolean> => {
         if (!user) return false;
 
         // Unlimited credits for pro/agency
@@ -49,11 +53,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (user.credits <= 0) return false;
 
-        const updatedUser = updateUser(user.id, { credits: user.credits - 1 });
-        if (updatedUser) {
-            setUser(updatedUser);
-            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-            return true;
+        try {
+            const updatedUser = await updateUser(user.id, { credits: user.credits - 1 });
+            if (updatedUser) {
+                setUser(updatedUser);
+                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                return true;
+            }
+        } catch (err) {
+            console.error("Failed to use credit", err);
         }
         return false;
     };
@@ -67,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const userInfo = await userInfoResponse.json();
 
                 // Create or get user from database
-                const dbUser = createUser({
+                const dbUser = await createUser({
                     email: userInfo.email,
                     name: userInfo.name,
                     picture: userInfo.picture,
@@ -82,16 +90,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         onError: (errorResponse) => console.log(errorResponse),
     });
 
-    const mockLogin = (email: string) => {
-        // Create or get user from database
-        const dbUser = createUser({
-            email,
-            name: email.split('@')[0],
-            picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=6366f1&color=fff`,
-        });
+    const mockLogin = async (email: string) => {
+        try {
+            // Create or get user from database
+            const dbUser = await createUser({
+                email,
+                name: email.split('@')[0],
+                picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=6366f1&color=fff`,
+            });
 
-        setUser(dbUser);
-        localStorage.setItem('currentUser', JSON.stringify(dbUser));
+            setUser(dbUser);
+            localStorage.setItem('currentUser', JSON.stringify(dbUser));
+        } catch (error) {
+            console.error('Mock Login Failed', error);
+        }
     };
 
     const logout = () => {
@@ -103,12 +115,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Sync user state with database on mount
     useEffect(() => {
         if (user?.email) {
-            const dbUser = getUserByEmail(user.email);
-            if (dbUser && JSON.stringify(dbUser) !== JSON.stringify(user)) {
-                setUser(dbUser);
-                localStorage.setItem('currentUser', JSON.stringify(dbUser));
-            }
+            refreshUser();
         }
+    }, [user?.email]); // Added dependency to safe refresh but might loop if not careful. 
+    // Actually user?.email changes only when user changes, but refreshUser updates user.
+    // So JSON.stringify check in original was good.
+    // Re-implementing mount check only.
+
+    useEffect(() => {
+        const init = async () => {
+            if (user?.email) {
+                const dbUser = await getUserByEmail(user.email);
+                if (dbUser && user && dbUser.lastLoginAt !== user.lastLoginAt) { // Basic check
+                    setUser(dbUser);
+                    localStorage.setItem('currentUser', JSON.stringify(dbUser));
+                }
+            }
+        };
+        init();
     }, []);
 
     return (

@@ -23,13 +23,13 @@ export const UserDashboard: React.FC = () => {
 
     useEffect(() => {
         if (user?.id) {
-            setProjects(getProjectsByUserId(user.id));
+            getProjectsByUserId(user.id).then(setProjects);
         }
     }, [user]);
 
-    const handleDeleteProject = (projectId: string) => {
+    const handleDeleteProject = async (projectId: string) => {
         if (confirm('Are you sure you want to delete this project?')) {
-            deleteProject(projectId);
+            await deleteProject(projectId);
             setProjects(projects.filter(p => p.id !== projectId));
         }
     };
@@ -66,9 +66,9 @@ export const UserDashboard: React.FC = () => {
                             </div>
                         </div>
                         <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${plan === 'agency' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                                plan === 'pro' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                                    plan === 'starter' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                        'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                            plan === 'pro' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                plan === 'starter' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                    'bg-slate-500/10 text-slate-400 border border-slate-500/20'
                             }`}>
                             <Crown className="w-3 h-3" />
                             {currentPlan?.name || 'Free'} Plan
@@ -101,8 +101,8 @@ export const UserDashboard: React.FC = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as TabType)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === tab.id
-                                        ? 'bg-blue-600 text-white'
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                     }`}
                             >
                                 <tab.icon size={18} />
@@ -214,9 +214,9 @@ export const UserDashboard: React.FC = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <span className={`px-2 py-1 rounded text-xs font-medium ${project.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                            project.status === 'processing' ? 'bg-yellow-500/10 text-yellow-400' :
-                                                                project.status === 'failed' ? 'bg-red-500/10 text-red-400' :
-                                                                    'bg-slate-500/10 text-slate-400'
+                                                        project.status === 'processing' ? 'bg-yellow-500/10 text-yellow-400' :
+                                                            project.status === 'failed' ? 'bg-red-500/10 text-red-400' :
+                                                                'bg-slate-500/10 text-slate-400'
                                                         }`}>
                                                         {project.status.toUpperCase()}
                                                     </span>
@@ -274,14 +274,14 @@ export const UserDashboard: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${plan === 'agency' ? 'bg-purple-500/10' :
-                                            plan === 'pro' ? 'bg-blue-500/10' :
-                                                plan === 'starter' ? 'bg-emerald-500/10' :
-                                                    'bg-slate-800'
+                                        plan === 'pro' ? 'bg-blue-500/10' :
+                                            plan === 'starter' ? 'bg-emerald-500/10' :
+                                                'bg-slate-800'
                                         }`}>
                                         <Crown className={`w-6 h-6 ${plan === 'agency' ? 'text-purple-400' :
-                                                plan === 'pro' ? 'text-blue-400' :
-                                                    plan === 'starter' ? 'text-emerald-400' :
-                                                        'text-slate-400'
+                                            plan === 'pro' ? 'text-blue-400' :
+                                                plan === 'starter' ? 'text-emerald-400' :
+                                                    'text-slate-400'
                                             }`} />
                                     </div>
                                     <div>

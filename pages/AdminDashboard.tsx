@@ -25,20 +25,25 @@ export const AdminDashboard: React.FC = () => {
         loadData();
     }, []);
 
-    const loadData = () => {
-        setUsers(getAllUsers());
-        setProjects(getAllProjects());
-        setStats(getStats());
+    const loadData = async () => {
+        const [usersData, projectsData, statsData] = await Promise.all([
+            getAllUsers(),
+            getAllProjects(),
+            getStats()
+        ]);
+        setUsers(usersData);
+        setProjects(projectsData);
+        setStats(statsData);
     };
 
-    const handlePlanChange = (userId: string, newPlan: PlanType) => {
-        updateUserPlan(userId, newPlan);
+    const handlePlanChange = async (userId: string, newPlan: PlanType) => {
+        await updateUserPlan(userId, newPlan);
         loadData();
         setShowEditModal(false);
     };
 
-    const handleCreditsChange = (userId: string, credits: number) => {
-        updateUser(userId, { credits });
+    const handleCreditsChange = async (userId: string, credits: number) => {
+        await updateUser(userId, { credits });
         loadData();
     };
 
@@ -101,8 +106,8 @@ export const AdminDashboard: React.FC = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as TabType)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === tab.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                 }`}
                         >
                             <tab.icon size={18} />
@@ -184,9 +189,9 @@ export const AdminDashboard: React.FC = () => {
                                             <div className="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full bg-gradient-to-r ${plan.id === 'agency' ? 'from-purple-500 to-pink-500' :
-                                                            plan.id === 'pro' ? 'from-blue-500 to-cyan-500' :
-                                                                plan.id === 'starter' ? 'from-emerald-500 to-green-500' :
-                                                                    'from-slate-500 to-slate-600'
+                                                        plan.id === 'pro' ? 'from-blue-500 to-cyan-500' :
+                                                            plan.id === 'starter' ? 'from-emerald-500 to-green-500' :
+                                                                'from-slate-500 to-slate-600'
                                                         }`}
                                                     style={{ width: `${percentage}%` }}
                                                 ></div>
@@ -217,9 +222,9 @@ export const AdminDashboard: React.FC = () => {
                                                 <div className="text-slate-400 text-sm">{u.email}</div>
                                             </div>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${u.plan === 'agency' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                                                    u.plan === 'pro' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                                                        u.plan === 'starter' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                                            'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                                                u.plan === 'pro' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                                    u.plan === 'starter' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                        'bg-slate-500/10 text-slate-400 border border-slate-500/20'
                                                 }`}>
                                                 {u.plan.toUpperCase()}
                                             </span>
@@ -237,9 +242,9 @@ export const AdminDashboard: React.FC = () => {
                                         <div key={i} className="p-4 hover:bg-slate-800/50">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className={`px-2 py-1 rounded text-xs font-medium ${p.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                        p.status === 'processing' ? 'bg-yellow-500/10 text-yellow-400' :
-                                                            p.status === 'failed' ? 'bg-red-500/10 text-red-400' :
-                                                                'bg-slate-500/10 text-slate-400'
+                                                    p.status === 'processing' ? 'bg-yellow-500/10 text-yellow-400' :
+                                                        p.status === 'failed' ? 'bg-red-500/10 text-red-400' :
+                                                            'bg-slate-500/10 text-slate-400'
                                                     }`}>
                                                     {p.status.toUpperCase()}
                                                 </span>
@@ -320,9 +325,9 @@ export const AdminDashboard: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${u.plan === 'agency' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                                                        u.plan === 'pro' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                                                            u.plan === 'starter' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                                                'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                                                    u.plan === 'pro' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                                        u.plan === 'starter' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                            'bg-slate-500/10 text-slate-400 border border-slate-500/20'
                                                     }`}>
                                                     {u.plan.toUpperCase()}
                                                 </span>
@@ -389,9 +394,9 @@ export const AdminDashboard: React.FC = () => {
                                                 <td className="px-6 py-4 text-slate-400">{projectUser?.email || 'Unknown'}</td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-medium ${p.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                            p.status === 'processing' ? 'bg-yellow-500/10 text-yellow-400' :
-                                                                p.status === 'failed' ? 'bg-red-500/10 text-red-400' :
-                                                                    'bg-slate-500/10 text-slate-400'
+                                                        p.status === 'processing' ? 'bg-yellow-500/10 text-yellow-400' :
+                                                            p.status === 'failed' ? 'bg-red-500/10 text-red-400' :
+                                                                'bg-slate-500/10 text-slate-400'
                                                         }`}>
                                                         {p.status.toUpperCase()}
                                                     </span>

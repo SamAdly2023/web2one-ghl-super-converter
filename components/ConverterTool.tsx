@@ -67,16 +67,17 @@ export const ConverterTool: React.FC = () => {
         setAppState(AppState.FETCHING);
         setSteps(s => s.map(step => ({ ...step, status: 'pending' })));
 
-        // Create project in database
-        const project = createProject({
-            userId: user.id,
-            sourceUrl: url,
-            rebrandInfo: rebrand
-        });
-        setCurrentProjectId(project.id);
-        updateProject(project.id, { status: 'processing' });
-
+        let project;
         try {
+            // Create project in database
+            project = await createProject({
+                userId: user.id,
+                sourceUrl: url,
+                rebrandInfo: rebrand
+            });
+            setCurrentProjectId(project.id);
+            await updateProject(project.id, { status: 'processing' });
+
             updateStep('fetch', 'loading');
             const rawHtml = await fetchWebsiteHtml(url);
             updateStep('fetch', 'completed');
@@ -96,15 +97,15 @@ export const ConverterTool: React.FC = () => {
             setAppState(AppState.COMPLETED);
 
             // Update project with result
-            updateProject(project.id, {
+            await updateProject(project.id, {
                 status: 'completed',
                 outputHtml: optimized,
                 completedAt: new Date().toISOString()
             });
 
             // Use credit
-            authUseCredit();
-            refreshUser();
+            await authUseCredit();
+            await refreshUser();
 
         } catch (err: any) {
             setError(err.message || 'An unexpected error occurred during reconstruction.');
@@ -112,8 +113,8 @@ export const ConverterTool: React.FC = () => {
             setSteps(prev => prev.map(s => s.status === 'loading' ? { ...s, status: 'error' } : s));
 
             // Update project as failed
-            if (currentProjectId) {
-                updateProject(currentProjectId, { status: 'failed' });
+            if (project?.id) {
+                await updateProject(project.id, { status: 'failed' });
             }
         }
     };
