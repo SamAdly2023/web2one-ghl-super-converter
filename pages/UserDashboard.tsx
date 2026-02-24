@@ -472,8 +472,6 @@ export const UserDashboard: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-<<<<<<< HEAD
-=======
 
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -543,21 +541,20 @@ export const UserDashboard: React.FC = () => {
                                 )}
                             </div>
                         </div>
->>>>>>> cacd644 (feat(api): add API key generation, clone endpoint, client service, and UI)
                     </div >
                 )}
             </div >
 
-    <PayPalModal
-        isOpen={isPayPalOpen}
-        onClose={() => setIsPayPalOpen(false)}
-        plan={selectedPlan}
-        mode={payPalMode}
-        onSuccess={() => {
-            refreshUser();
-            setIsPayPalOpen(false);
-        }}
-    />
+            <PayPalModal
+                isOpen={isPayPalOpen}
+                onClose={() => setIsPayPalOpen(false)}
+                plan={selectedPlan}
+                mode={payPalMode}
+                onSuccess={() => {
+                    refreshUser();
+                    setIsPayPalOpen(false);
+                }}
+            />
         </div >
     );
 };

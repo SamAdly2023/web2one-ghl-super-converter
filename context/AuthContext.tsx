@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { googleLogout, useGoogleLogin } from '@react-oauth/google';
+import { googleLogout } from '@react-oauth/google';
+import firebaseClient, { signInWithGooglePopup, onAuthChange, getIdToken } from '../services/firebaseClient';
 import { User as AppUser, PlanType, PLANS } from '../types';
 import { createUser, getUserByEmail, updateUser, updateUserPlan } from '../services/databaseService';
 
@@ -66,29 +67,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
     };
 
-    const loginWithGoogle = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            try {
-                const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                });
-                const userInfo = await userInfoResponse.json();
+    const loginWithGoogle = async () => {
+        try {
+            const user = await signInWithGooglePopup();
+            if (!user) return;
 
-                // Create or get user from database
-                const dbUser = await createUser({
-                    email: userInfo.email,
-                    name: userInfo.name,
-                    picture: userInfo.picture,
-                });
+            const token = await getIdToken(user as any);
 
-                setUser(dbUser);
-                localStorage.setItem('currentUser', JSON.stringify(dbUser));
-            } catch (error) {
-                console.error('Login Failed', error);
-            }
-        },
-        onError: (errorResponse) => console.log(errorResponse),
-    });
+            // Use the firebase user info to create or fetch local DB user
+            const dbUser = await createUser({
+                email: user.email || '',
+                name: user.displayName || (user.email || '').split('@')[0],
+                picture: user.photoURL || undefined,
+            });
+
+            setUser(dbUser);
+            localStorage.setItem('currentUser', JSON.stringify(dbUser));
+        } catch (error) {
+            console.error('Login Failed', error);
+        }
+    };
 
     const mockLogin = async (email: string) => {
         try {
@@ -106,7 +104,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await firebaseClient.signOut();
+        } catch (e) {
+            // ignore
+        }
         googleLogout();
         setUser(null);
         localStorage.removeItem('currentUser');
@@ -123,16 +126,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Re-implementing mount check only.
 
     useEffect(() => {
-        const init = async () => {
-            if (user?.email) {
-                const dbUser = await getUserByEmail(user.email);
-                if (dbUser && user && dbUser.lastLoginAt !== user.lastLoginAt) { // Basic check
+        const unsub = onAuthChange(async (fbUser) => {
+            if (!fbUser) return;
+            const email = fbUser.email || '';
+            try {
+                const dbUser = await getUserByEmail(email);
+                if (dbUser) {
                     setUser(dbUser);
                     localStorage.setItem('currentUser', JSON.stringify(dbUser));
                 }
+            } catch (e) {
+                console.error('Failed to sync firebase user', e);
             }
-        };
-        init();
+        });
+
+        return () => unsub();
     }, []);
 
     return (

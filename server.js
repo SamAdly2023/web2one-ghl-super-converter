@@ -4,9 +4,38 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { run, get, all } from './db.js';
+import admin from 'firebase-admin';
+import fs from 'fs';
 import crypto from 'crypto';
 
 dotenv.config();
+
+// Initialize Firebase Admin SDK if service account provided
+try {
+  const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || process.env.FIREBASE_SERVICE_ACCOUNT_FILE;
+  let serviceAccount = null;
+  if (saPath && fs.existsSync(saPath)) {
+    serviceAccount = JSON.parse(fs.readFileSync(saPath, 'utf8'));
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (e) {
+      console.warn('FIREBASE_SERVICE_ACCOUNT env var is not valid JSON');
+    }
+  }
+
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: process.env.FIREBASE_DATABASE_URL || undefined,
+    });
+    console.log('Firebase admin initialized');
+  } else {
+    console.log('No Firebase service account provided; admin SDK not initialized');
+  }
+} catch (e) {
+  console.error('Failed to initialize firebase-admin', e);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -302,6 +331,22 @@ const parseProject = (p) => {
       timestamp: new Date().toISOString(),
       version: '4.1.0'
     });
+  });
+
+  // Verify Firebase ID token (Authorization: Bearer <idToken>)
+  app.post('/api/auth/verify', async (req, res) => {
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.replace(/^Bearer\s+/i, '') || req.body.idToken || req.query.idToken;
+    if (!idToken) return res.status(400).json({ error: 'Missing idToken' });
+
+    if (!admin.apps.length) return res.status(500).json({ error: 'Firebase admin not initialized' });
+
+    try {
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      res.json({ decoded });
+    } catch (err) {
+      res.status(401).json({ error: 'Invalid token', details: err.message });
+    }
   });
 
 <<<<<<< HEAD
