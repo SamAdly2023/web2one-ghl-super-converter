@@ -349,104 +349,45 @@ const parseProject = (p) => {
     }
   });
 
-// Helper: fetch website HTML with CORS proxy fallbacks
-async function fetchWebsiteHtml(url) {
-  try {
-    const parsed = new URL(url);
-    if (!parsed.protocol.startsWith('http')) throw new Error();
-  } catch (e) {
-    throw new Error('Invalid URL format. Please include http:// or https://');
-  }
-
-  const encodedUrl = encodeURIComponent(url);
-  const proxies = [
-    { url: `https://corsproxy.io/?url=${encodedUrl}`, type: 'text' },
-    { url: `https://api.allorigins.win/get?url=${encodedUrl}&_ts=${Date.now()}`, type: 'json' },
-    { url: `https://api.codetabs.com/v1/proxy?quest=${encodedUrl}`, type: 'text' }
-  ];
-
-  for (const proxy of proxies) {
+  // Helper: fetch website HTML with CORS proxy fallbacks
+  async function fetchWebsiteHtml(url) {
     try {
-      const response = await fetch(proxy.url);
-      if (response.ok) {
-        let content = '';
-        if (proxy.type === 'json') {
-          const data = await response.json();
-          content = data.contents;
-        } else {
-          content = await response.text();
-        }
-
-        if (content && content.includes('<html') && content.length > 100) {
-          return content;
-        }
-      }
-    } catch (err) {
-      console.warn(`Proxy ${proxy.url} failed: ${err?.message || err}`);
+      const parsed = new URL(url);
+      if (!parsed.protocol.startsWith('http')) throw new Error();
+    } catch (e) {
+      throw new Error('Invalid URL format. Please include http:// or https://');
     }
+
+    const encodedUrl = encodeURIComponent(url);
+    const proxies = [
+      { url: `https://corsproxy.io/?url=${encodedUrl}`, type: 'text' },
+      { url: `https://api.allorigins.win/get?url=${encodedUrl}&_ts=${Date.now()}`, type: 'json' },
+      { url: `https://api.codetabs.com/v1/proxy?quest=${encodedUrl}`, type: 'text' }
+    ];
+
+    for (const proxy of proxies) {
+      try {
+        const response = await fetch(proxy.url);
+        if (response.ok) {
+          let content = '';
+          if (proxy.type === 'json') {
+            const data = await response.json();
+            content = data.contents;
+          } else {
+            content = await response.text();
+          }
+
+          if (content && content.includes('<html') && content.length > 100) {
+            return content;
+          }
+        }
+      } catch (err) {
+        console.warn(`Proxy ${proxy.url} failed: ${err?.message || err}`);
+      }
+    }
+
+    throw new Error('Target site is heavily protected or proxies are down.');
   }
-
-  throw new Error('Target site is heavily protected or proxies are down.');
-}
-
-// --- API Keys Management ---
-
-app.post('/api/keys', async (req, res) => {
-  const { userId, name } = req.body;
-  try {
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const apiKey = crypto.randomBytes(24).toString('hex');
-    const createdAt = new Date().toISOString();
-
-    await run('INSERT INTO api_keys (id, apiKey, userId, name, createdAt) VALUES (?, ?, ?, ?, ?)', [
-      id, apiKey, userId, name || null, createdAt
-    ]);
-
-    const row = await get('SELECT id, apiKey, userId, name, revoked, createdAt FROM api_keys WHERE id = ?', [id]);
-    res.json(row);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/keys/user/:userId', async (req, res) => {
-  try {
-    const rows = await all('SELECT id, apiKey, userId, name, revoked, createdAt FROM api_keys WHERE userId = ?', [req.params.userId]);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/keys/:id', async (req, res) => {
-  try {
-    await run('UPDATE api_keys SET revoked = 1 WHERE id = ?', [req.params.id]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Public clone endpoint secured by API key
-app.post('/api/clone', async (req, res) => {
-  try {
-    const apiKeyHeader = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || req.query.apiKey || req.body.apiKey;
-    const url = req.body.url || req.query.url;
-
-    if (!apiKeyHeader) return res.status(401).json({ error: 'Missing API key' });
-    if (!url) return res.status(400).json({ error: 'Missing url parameter' });
-
-    const keyRow = await get('SELECT * FROM api_keys WHERE apiKey = ? AND revoked = 0', [apiKeyHeader]);
-    if (!keyRow) return res.status(401).json({ error: 'Invalid or revoked API key' });
-
-    const html = await fetchWebsiteHtml(url);
-
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
