@@ -65,6 +65,31 @@ db.serialize(() => {
         description TEXT,
         FOREIGN KEY(userId) REFERENCES users(id)
     )`);
+
+    // API Keys Table
+    db.run(`CREATE TABLE IF NOT EXISTS api_keys (
+            id TEXT PRIMARY KEY,
+            apiKey TEXT UNIQUE,
+            userId TEXT,
+            name TEXT,
+            revoked INTEGER DEFAULT 0,
+            createdAt TEXT,
+            FOREIGN KEY(userId) REFERENCES users(id)
+        )`);
+<<<<<<< HEAD
+=======
+
+    // API Keys Table
+    db.run(`CREATE TABLE IF NOT EXISTS api_keys (
+        id TEXT PRIMARY KEY,
+        apiKey TEXT UNIQUE,
+        userId TEXT,
+        name TEXT,
+        revoked INTEGER DEFAULT 0,
+        createdAt TEXT,
+        FOREIGN KEY(userId) REFERENCES users(id)
+    )`);
+>>>>>>> cacd644 (feat(api): add API key generation, clone endpoint, client service, and UI)
 });
 
 // Helper for Promisified DB operations

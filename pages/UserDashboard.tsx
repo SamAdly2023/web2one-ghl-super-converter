@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Project, PLANS, Plan } from '../types';
 import { getProjectsByUserId, deleteProject } from '../services/databaseService';
 import { PayPalModal } from '../components/PayPalModal';
+import { createApiKey, getApiKeysByUserId, revokeApiKey } from '../services/apiKeysService';
 import {
     Zap, Clock, FolderOpen, Settings, CreditCard, HelpCircle,
     Plus, Eye, Trash2, Download, Copy, ExternalLink, Check,
@@ -19,6 +20,8 @@ export const UserDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabType>('converter');
     const [projects, setProjects] = useState<Project[]>([]);
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [apiKeys, setApiKeys] = useState<any[]>([]);
+    const [createdKeyValue, setCreatedKeyValue] = useState<string | null>(null);
 
     // Billing State
     const [isPayPalOpen, setIsPayPalOpen] = useState(false);
@@ -49,6 +52,7 @@ export const UserDashboard: React.FC = () => {
     useEffect(() => {
         if (user?.id) {
             getProjectsByUserId(user.id).then(setProjects);
+            getApiKeysByUserId(user.id).then(setApiKeys).catch(() => setApiKeys([]));
         }
     }, [user]);
 
@@ -468,20 +472,92 @@ export const UserDashboard: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+<<<<<<< HEAD
+=======
 
-            <PayPalModal
-                isOpen={isPayPalOpen}
-                onClose={() => setIsPayPalOpen(false)}
-                plan={selectedPlan}
-                mode={payPalMode}
-                onSuccess={() => {
-                    refreshUser();
-                    setIsPayPalOpen(false);
-                }}
-            />
-        </div>
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-white">API Keys</h3>
+                                <button
+                                    onClick={async () => {
+                                        if (!user?.id) return alert('Please sign in');
+                                        try {
+                                            const row = await createApiKey(user.id, 'Key created via dashboard');
+                                            // show the raw key once
+                                            setCreatedKeyValue(row.apiKey);
+                                            setApiKeys(prev => [row, ...prev]);
+                                        } catch (e: any) {
+                                            alert(e.message || 'Failed to create key');
+                                        }
+                                    }}
+                                    className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                >
+                                    Create Key
+                                </button>
+                            </div>
+
+                            {createdKeyValue && (
+                                <div className="mb-4 p-3 bg-slate-800 rounded">
+                                    <div className="text-xs text-slate-400 mb-1">New API Key (save this now, it will be hidden later)</div>
+                                    <div className="font-mono text-sm text-white truncate">{createdKeyValue}</div>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                {apiKeys.length === 0 ? (
+                                    <div className="text-slate-400">No API keys yet. Create one to get started.</div>
+                                ) : (
+                                    apiKeys.map(k => (
+                                        <div key={k.id} className="flex items-center justify-between bg-slate-800/40 p-3 rounded">
+                                            <div>
+                                                <div className="text-sm text-white">{k.name || 'Unnamed key'}</div>
+                                                <div className="text-xs text-slate-400">Created: {new Date(k.createdAt).toLocaleString()}</div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(k.apiKey);
+                                                        alert('API key copied to clipboard');
+                                                    }}
+                                                    className="px-3 py-1 bg-slate-700 rounded text-slate-200 text-sm"
+                                                >
+                                                    Copy
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!confirm('Revoke this key?')) return;
+                                                        try {
+                                                            await revokeApiKey(k.id);
+                                                            setApiKeys(apiKeys.filter(a => a.id !== k.id));
+                                                        } catch (e: any) {
+                                                            alert(e.message || 'Failed to revoke');
+                                                        }
+                                                    }}
+                                                    className="px-3 py-1 bg-red-600 text-white rounded text-sm"
+                                                >
+                                                    Revoke
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+>>>>>>> cacd644 (feat(api): add API key generation, clone endpoint, client service, and UI)
+                    </div >
+                )}
+            </div >
+
+    <PayPalModal
+        isOpen={isPayPalOpen}
+        onClose={() => setIsPayPalOpen(false)}
+        plan={selectedPlan}
+        mode={payPalMode}
+        onSuccess={() => {
+            refreshUser();
+            setIsPayPalOpen(false);
+        }}
+    />
+        </div >
     );
 };
