@@ -349,8 +349,6 @@ const parseProject = (p) => {
     }
   });
 
-<<<<<<< HEAD
-=======
 // Helper: fetch website HTML with CORS proxy fallbacks
 async function fetchWebsiteHtml(url) {
   try {
@@ -450,7 +448,6 @@ app.post('/api/clone', async (req, res) => {
   }
 });
 
->>>>>>> cacd644 (feat(api): add API key generation, clone endpoint, client service, and UI)
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   });
